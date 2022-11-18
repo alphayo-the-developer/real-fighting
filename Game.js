@@ -1,8 +1,12 @@
-import * as THREE from '../../libs/three128/three.module.js';
+// import * as THREE from '../../libs/three128/three.module.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.118/build/three.module.js';
 import { GLTFLoader } from '../../libs/three128/GLTFLoader.js';
 import { RGBELoader } from '../../libs/three128/RGBELoader.js';
 import { OrbitControls } from '../../libs/three128/OrbitControls.js';
 import { LoadingBar } from '../../libs/LoadingBar.js';
+import { NPCHandler } from './NPCHandler.js';
+import { BasicCharacterController } from './Player.js';
+// import { Fbxloader } from '../../libs/loader.js';
 
 class Game{
 	constructor(){
@@ -18,6 +22,7 @@ class Game{
         
 		this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 500 );
 		this.camera.position.set( -11, 1.5, -1.5 );
+		this.camera.lookAt(0,0,6);
         
 		let col = 0x201510;
 		this.scene = new THREE.Scene();
@@ -90,60 +95,134 @@ class Game{
     
 	load(){
         this.loadEnvironment();
+		// this.npcHandler = new NPCHandler(this);
+		this.characterController = new BasicCharacterController(this);
     }
 
     loadEnvironment(){
-    	const loader = new GLTFLoader( ).setPath(`${this.assetsPath}factory/`);
+    	const loader = new GLTFLoader( ).setPath(`${this.assetsPath}arena/ring/`);
+    	const loader1 = new GLTFLoader( ).setPath(`${this.assetsPath}arena/`);
         
         this.loadingBar.visible = true;
 		
-		// Load a glTF resource
-		loader.load(
+
+		// Load a glTF resource(stadium)	
+		loader1.load(
 			// resource URL
-			'factory1.glb',
+			'scene.gltf',
 			// called when the resource is loaded
 			gltf => {
+				gltf.scene.scale.set(0.0065,0.0065,0.0065);
 				this.scene.add(gltf.scene);
-				this.factory = gltf.scene;
-				this.fans = [];
+				// this.factory = gltf.scene;
+				// this.fans = [];
 
 				const mergeObjects = {elements2:[], elements5:[], terrain:[]};
 
-				gltf.scene.traverse( child => {
-					if(child.isMesh){
-						if(child.name.includes('fan')){
-							this.fans.push(child);
-						}else if (child.material.name.includes('elements2')){
-							mergeObjects.elements5.push(child);
-							child.castShadow = true;
-						}else if (child.material.name.includes('terrain')){
-							mergeObjects.terrain.push(child);
-							child.castShadow = true;
-						}else if (child.material.name.includes('sand')){
-							child.receiveShadow = true;
-						}else if (child.material.name.includes('elements1')){
-							child.castShadow = true;
-							child.receiveShadow = true;
+				// gltf.scene.traverse( child => {
+				// 	if(child.isMesh){
+				// 		if(child.name.includes('fan')){
+				// 			this.fans.push(child);
+				// 		}else if (child.material.name.includes('elements2')){
+				// 			mergeObjects.elements5.push(child);
+				// 			child.castShadow = true;
+				// 		}else if (child.material.name.includes('terrain')){
+				// 			mergeObjects.terrain.push(child);
+				// 			child.castShadow = true;
+				// 		}else if (child.material.name.includes('sand')){
+				// 			child.receiveShadow = true;
+				// 		}else if (child.material.name.includes('elements1')){
+				// 			child.castShadow = true;
+				// 			child.receiveShadow = true;
 
-						}else if (child.material.name.includes('main')){
-							child.castShadow = true;
-						}
-					}
-				});
+				// 		}else if (child.material.name.includes('main')){
+				// 			child.castShadow = true;
+				// 		}
+				// 	}
+				// });
 
-				for(let prop in mergeObjects){
-					const array = mergeObjects[prop];
-					let material;
-					array.forEach( object => {
-						if (material == undefined){
-							material= object.material;
-						}else{
-							object.material = material;
-						}
-					})
-				}
+				// for(let prop in mergeObjects){
+				// 	const array = mergeObjects[prop];
+				// 	let material;
+				// 	array.forEach( object => {
+				// 		if (material == undefined){
+				// 			material= object.material;
+				// 		}else{
+				// 			object.material = material;
+				// 		}
+				// 	})
+				// }
 
 				this.loadingBar.visible = false;
+
+				// this.renderer.setAnimationLoop(this.render.bind(this));
+			},
+			// called while loading is progressing
+			xhr => {
+
+				this.loadingBar.update('environment', xhr.loaded, xhr.total);
+				
+			},
+			// called when loading has errors
+			err => {
+
+				console.error( err );
+
+			}
+		);
+
+
+
+
+		// Load a glTF resource(arena)		
+		loader.load(
+			// resource URL
+			'mainarena.gltf',
+			// called when the resource is loaded
+			gltf => {
+				gltf.scene.scale.set(0.0095,0.0075,0.0095);
+				gltf.scene.position.set(1, 1.5, 1);
+
+				this.scene.add(gltf.scene);
+				// this.factory = gltf.scene;
+				// this.fans = [];
+				const mergeObjects = {elements2:[], elements5:[], terrain:[]};
+
+				// gltf.scene.traverse( child => {
+				// 	if(child.isMesh){
+				// 		if(child.name.includes('fan')){
+				// 			this.fans.push(child);
+				// 		}else if (child.material.name.includes('elements2')){
+				// 			mergeObjects.elements5.push(child);
+				// 			child.castShadow = true;
+				// 		}else if (child.material.name.includes('terrain')){
+				// 			mergeObjects.terrain.push(child);
+				// 			child.castShadow = true;
+				// 		}else if (child.material.name.includes('sand')){
+				// 			child.receiveShadow = true;
+				// 		}else if (child.material.name.includes('elements1')){
+				// 			child.castShadow = true;
+				// 			child.receiveShadow = true;
+
+				// 		}else if (child.material.name.includes('main')){
+				// 			child.castShadow = true;
+				// 		}
+				// 	}
+				// });
+
+				// for(let prop in mergeObjects){
+				// 	const array = mergeObjects[prop];
+				// 	let material;
+				// 	array.forEach( object => {
+				// 		if (material == undefined){
+				// 			material= object.material;
+				// 		}else{
+				// 			object.material = material;
+				// 		}
+				// 	})
+				// }
+
+				// this.loadingBar.visible = false;
 
 				this.renderer.setAnimationLoop(this.render.bind(this));
 			},
@@ -160,18 +239,17 @@ class Game{
 
 			}
 		);
+
+		
 	}			
     
 	render() {
-		const dt = this.clock.getDelta();
+		const dt = this.clock.getDelta();	
+		
+		this.renderer.render( this.scene, this.camera );
 
-		if (this.fans !== undefined){
-			this.fans.forEach( fan => {
-				fan.rotateY(dt);
-			});
-		}
-
-        this.renderer.render( this.scene, this.camera );
+		// this.npcHandler.update(dt);
+		this.characterController.Update(dt);
 
     }
 }
